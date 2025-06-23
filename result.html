@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Extracted & Predicted Questions</title>
+    <style>
+        body {
+            font-family: 'Noto Sans Devanagari', Arial, sans-serif;
+            margin: 30px;
+            background-color: #fefefe;
+        }
+
+        h2 {
+            font-weight: 600;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .question {
+            background: #f8f8f8;
+            padding: 12px 16px;
+            border-left: 4px solid #007acc;
+            border-radius: 6px;
+            font-size: 16px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+        }
+
+        .predicted {
+            background: #fff9e6;
+            border-left: 4px solid #ffa500;
+        }
+
+        img {
+            max-width: 600px;
+            margin-top: 10px;
+            display: block;
+        }
+
+        a {
+            display: inline-block;
+            margin-top: 40px;
+            text-decoration: none;
+            color: #007acc;
+            font-weight: bold;
+        }
+
+        hr {
+            margin: 50px 0;
+            border: none;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+
+    <!-- Fonts and Math rendering -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async
+            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+    </script>
+</head>
+<body>
+
+    <h2>📘 Extracted Questions for: {{ filename }}</h2>
+    {% for q, img in questions %}
+        <div class="question">{{ q | safe }}</div>
+        {% if img %}
+            <img src="{{ url_for('uploaded_image', filename=img) }}" alt="Diagram">
+        {% endif %}
+    {% endfor %}
+
+    <hr>
+
+    <h2>🧠 Predicted Question Paper</h2>
+    <div class="question predicted">{{ predicted | safe }}</div>
+
+    <a href="/">← Upload another file</a>
+
+</body>
+</html>
