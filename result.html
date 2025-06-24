@@ -1,82 +1,136 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Extracted & Predicted Questions</title>
-    <style>
-        body {
-            font-family: 'Noto Sans Devanagari', Arial, sans-serif;
-            margin: 30px;
-            background-color: #fefefe;
-        }
+  <meta charset="UTF-8">
+  <title>Extracted & Predicted Questions</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
 
-        h2 {
-            font-weight: 600;
-            margin-top: 40px;
-            margin-bottom: 20px;
-            color: #333;
-        }
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+      background: #f4f7fa;
+      margin: 0;
+      padding: 40px;
+      color: #222;
+    }
 
-        .question {
-            background: #f8f8f8;
-            padding: 12px 16px;
-            border-left: 4px solid #007acc;
-            border-radius: 6px;
-            font-size: 16px;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            white-space: pre-wrap;
-        }
+    h1 {
+      font-size: 26px;
+      color: #007acc;
+      border-bottom: 2px solid #007acc;
+      padding-bottom: 10px;
+      margin-top: 40px;
+    }
 
-        .predicted {
-            background: #fff9e6;
-            border-left: 4px solid #ffa500;
-        }
+    h2 {
+      margin-top: 30px;
+      font-size: 20px;
+      color: #333;
+    }
 
-        img {
-            max-width: 600px;
-            margin-top: 10px;
-            display: block;
-        }
+    .question {
+      background: #ffffff;
+      padding: 18px 22px;
+      margin-bottom: 20px;
+      border-left: 5px solid #007acc;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+      white-space: pre-wrap;
+      font-size: 16px;
+      line-height: 1.6;
+    }
 
-        a {
-            display: inline-block;
-            margin-top: 40px;
-            text-decoration: none;
-            color: #007acc;
-            font-weight: bold;
-        }
+    .question img {
+      max-width: 100%;
+      height: auto;
+      margin-top: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
 
-        hr {
-            margin: 50px 0;
-            border: none;
-            border-top: 1px solid #ddd;
-        }
-    </style>
+    hr {
+      margin: 40px 0;
+      border: none;
+      border-top: 1px solid #ddd;
+    }
 
-    <!-- Fonts and Math rendering -->
-    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari&display=swap" rel="stylesheet">
-    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
-    <script id="MathJax-script" async
-            src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
-    </script>
+    a {
+      display: inline-block;
+      margin-top: 30px;
+      font-weight: 600;
+      text-decoration: none;
+      color: #007acc;
+      transition: color 0.3s;
+    }
+
+    a:hover {
+      color: #005b9f;
+    }
+
+    .download-btn {
+      display: inline-block;
+      background-color: #007acc;
+      color: white;
+      padding: 12px 24px;
+      margin-top: 30px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      text-decoration: none;
+      transition: background-color 0.3s ease;
+    }
+
+    .download-btn:hover {
+      background-color: #005f99;
+    }
+
+    @media (max-width: 600px) {
+      body {
+        padding: 20px;
+      }
+
+      .question {
+        font-size: 15px;
+        padding: 16px;
+      }
+
+      h1, h2 {
+        font-size: 20px;
+      }
+    }
+  </style>
+
+  <!-- MathJax for LaTeX rendering -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
 </head>
+
 <body>
 
-    <h2>📘 Extracted Questions for: {{ filename }}</h2>
+  <h1>📘 Extracted Questions</h1>
+  {% for filename, questions in all_sets %}
+    <h2>{{ filename }}</h2>
     {% for q, img in questions %}
-        <div class="question">{{ q | safe }}</div>
+      <div class="question">
+        $$ {{ q | safe }} $$
         {% if img %}
-            <img src="{{ url_for('uploaded_image', filename=img) }}" alt="Diagram">
+          <img src="{{ img }}" alt="Diagram">
         {% endif %}
+      </div>
     {% endfor %}
-
     <hr>
+  {% endfor %}
 
-    <h2>🧠 Predicted Question Paper</h2>
-    <div class="question predicted">{{ predicted | safe }}</div>
+  <h1>🧠 Predicted Question Paper</h1>
+  {% for q in predicted %}
+    <div class="question">$$ {{ q | safe }} $$</div>
+  {% endfor %}
 
-    <a href="/">← Upload another file</a>
+  <a href="/download/{{ zipfile }}" class="download-btn">📥 Download Extracted & Predicted Questions (ZIP)</a><br>
+  <a href="/">← Upload More Files</a>
 
 </body>
 </html>
