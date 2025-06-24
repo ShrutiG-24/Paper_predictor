@@ -1,11 +1,91 @@
-<!DOCTYPE html>
-<html>
-<head><title>Upload Paper</title></head>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Upload Exam Papers</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(to bottom right, #f0f4f8, #e2ecf3);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      background: #ffffff;
+      padding: 40px 50px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+    }
+
+    h2 {
+      margin-bottom: 30px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    input[type="file"] {
+      display: block;
+      margin: 20px auto;
+      font-size: 16px;
+    }
+
+    #fileCount {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #444;
+    }
+
+    input[type="submit"] {
+      background-color: #007acc;
+      color: white;
+      padding: 12px 24px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 20px;
+      transition: background-color 0.3s ease;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #005ea6;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      input[type="submit"] {
+        width: 100%;
+      }
+    }
+  </style>
+  <script>
+    function updateFileCount() {
+      const input = document.getElementById("pdf_file");
+      const display = document.getElementById("fileCount");
+      display.textContent = input.files.length + " file(s) selected";
+    }
+  </script>
+</head>
 <body>
-  <h2>Upload an Exam Paper</h2>
-  <form method="POST" enctype="multipart/form-data">
-    <input type="file" name="pdf_file" required>
-    <button type="submit">Upload</button>
-  </form>
+  <div class="container">
+    <h2>📁 Upload Exam Papers</h2>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="file" id="pdf_file" name="pdf_file" multiple onchange="updateFileCount()">
+      <p id="fileCount">No files selected</p>
+      <input type="submit" value="Upload & Extract">
+    </form>
+  </div>
 </body>
 </html>
