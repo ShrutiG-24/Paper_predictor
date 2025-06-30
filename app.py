@@ -1,192 +1,164 @@
-from flask import Flask, render_template, request, send_from_directory
+from flask import Flask, render_template, request, jsonify
 import os
-import re
 import fitz  # PyMuPDF
 from docx import Document
-from werkzeug.utils import secure_filename
-from langdetect import detect, DetectorFactory
-from openai import OpenAI
+import tempfile
+import json
 from dotenv import load_dotenv
-load_dotenv()
+from openai import OpenAI
+import re
 
-DetectorFactory.seed = 0
+load_dotenv()
 
 app = Flask(__name__)
 UPLOAD_FOLDER = "uploads"
-IMAGE_FOLDER = os.path.join(UPLOAD_FOLDER, "images")
-app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-os.makedirs(IMAGE_FOLDER, exist_ok=True)
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-client = OpenAI()  # Set this in your environment
-
-def clean_lines(lines, char_threshold=30, word_threshold=20):
-    allowed_chars = r"[A-Za-z0-9\s\.,\-\+=:\(\)\[\]\{\}/°μΩπσΔλ∞×∑α-ω√]"
-    allowed_pattern = re.compile(f"[^{allowed_chars}]")
-    devanagari_pattern = re.compile(r'[\u0900-\u097F]')
-    clean = []
-
-    for line in lines:
-        line = line.strip()
-        if not line or len(line) < 10:
-            continue
-
-        if devanagari_pattern.search(line):
-            continue
-
-        gibberish_char_count = len(allowed_pattern.findall(line))
-        gibberish_word_count = len(re.findall(r'\b[^a-zA-Z\s]{3,}\b', line))
-
-        if gibberish_char_count >= char_threshold or gibberish_word_count >= word_threshold:
-            continue
-
-        clean.append(line)
-
-    return clean
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def extract_text_from_pdf(pdf_path):
-    doc = fitz.open(pdf_path)
-    all_clean_lines = []
-    image_refs = []
-
-    for page_number, page in enumerate(doc, start=1):
-        text = page.get_text("text")
-        lines = text.splitlines()
-        clean = clean_lines(lines)
-        if not clean:
-            print(f"⚠ Skipping page {page_number} (no valid lines)")
-            continue
-
-        print(f"✅ Including lines from page {page_number}")
-        all_clean_lines.extend(clean)
-
-        image_list = page.get_images(full=True)
-        for img_index, img in enumerate(image_list):
-            xref = img[0]
-            base_image = doc.extract_image(xref)
-            image_bytes = base_image["image"]
-            ext = base_image["ext"]
-            image_filename = f"page-{page_number}-img-{img_index + 1}.{ext}"
-            image_path = os.path.join(IMAGE_FOLDER, image_filename)
-            with open(image_path, "wb") as f:
-                f.write(image_bytes)
-            image_refs.append(f"/uploads/images/{image_filename}")
-
-    return "\n".join(all_clean_lines), image_refs
-
-def extract_text_from_docx(docx_path):
-    doc = Document(docx_path)
-    return "\n".join(para.text for para in doc.paragraphs), []
-
-def is_english(text):
     try:
-        cleaned = re.sub(r'[^\w\s]', '', text)
-        if len(cleaned.strip()) < 5:
-            return False
-        return detect(cleaned) == "en"
-    except:
-        return False
+        doc = fitz.open(pdf_path)
+        text = ""
+        for page in doc:
+            text += page.get_text()
+        doc.close()
+        return text
+    except Exception as e:
+        print(f"Error extracting text from PDF: {e}")
+        return ""
 
-def extract_questions(text, image_refs):
-    lines = text.splitlines()
-    clean_lines = []
+def extract_text_from_docx(docx_stream):
+    try:
+        doc = Document(docx_stream)
+        return "\n".join(p.text for p in doc.paragraphs)
+    except Exception as e:
+        print(f"Error extracting text from DOCX: {e}")
+        return ""
 
-    skip_keywords = [
-        "time allowed", "maximum marks", "instructions", "note:", "attempt any",
-        "read the following", "you may use", "marking scheme", "guidelines",
-        "candidates must", "please check", "visually impaired",
-        "this paper consists", "question paper code"
-    ]
+def identify_sections(text):
+    section_pattern = re.compile(r'(Section\s+[A-Z])[^\n\r]*', re.IGNORECASE)
+    matches = section_pattern.findall(text)
+    sections = []
+    for match in matches:
+        full_title = match.strip()
+        if full_title not in sections:
+            sections.append(full_title)
+    return sections
 
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        if any(kw in line.lower() for kw in skip_keywords):
-            continue
-        clean_lines.append(line)
+def build_openai_prompt(extracted_text, identified_sections):
+    section_list_str = '\n'.join(f'- {s}' for s in identified_sections) if identified_sections else "- Section A\n- Section B\n- Section C"
 
-    questions = []
-    current_q = ""
+    prompt = f"""
+You are an expert CBSE Class 12 paper setter. Generate a challenging 70-mark practice question paper for CBSE Class 12, matching real board exam difficulty and structure.
 
-    for line in clean_lines:
-        if re.match(r'^(Q\.?\s*\d+|Q\s*\d+|Q\.?|^\d{1,2}[.)])', line, re.IGNORECASE):
-            if current_q:
-                questions.append(current_q.strip())
-            current_q = line
-        elif re.match(r'^\(?[A-Da-d]\)?\.?', line) or line.startswith("    "):
-            current_q += "\n    " + line
-        else:
-            current_q += " " + line.strip()
+Instructions:
+- Analyze the uploaded sample papers and past CBSE Class 12 board papers.
+- Use the original sections found in the paper:
+{section_list_str}
+- Create questions under each of those section headings.
+- Include a mix of MCQs, short answers, long answers, and case studies as per section type.
+- Ensure at least one diagram-based or visual question in each section where appropriate.
+- Use only challenging, application-based, and analytical questions.
+- Return ONLY valid JSON. No markdown, no explanation.
 
-    if current_q:
-        questions.append(current_q.strip())
+Format:
+{{
+  "paper_title": "CBSE Class 12 [Subject] Practice Question Paper (70 Marks)",
+  "total_marks": 70,
+  "sections": [
+    {{
+      "section_name": "[From extracted paper]",
+      "marks_per_question": X,
+      "total_questions": Y,
+      "questions": [
+        {{
+          "question": "...",
+          "options": {{"A": "...", "B": "..."}},
+          "question_type": "MCQ/Numerical/Diagram/Case Study/etc."
+        }}
+      ]
+    }}
+  ]
+}}
 
-    filtered = []
-    img_index = 0
-    for q in questions:
-        if not is_english(q):
-            continue
-        if any(kw in q.lower() for kw in ["figure", "diagram", "image", "shown below"]):
-            img = image_refs[img_index] if img_index < len(image_refs) else None
-            q += "\n    [image]"
-            filtered.append((q, img))
-            img_index += 1
-        else:
-            filtered.append((q, None))
+Extracted text for reference:
+{extracted_text}
+"""
+    return prompt
 
-    return filtered
+@app.route("/")
+def home():
+    return render_template("predictor.html")
 
-def generate_predicted_paper(previous_questions):
-    prompt = (
-        "You are an expert CBSE Physics paper setter. Based on the following previous exam questions, "
-        "generate a predicted paper for the upcoming exam. Do not repeat the same questions. "
-        "Use related concepts from the syllabus. Format as 10 questions, some objective, some descriptive.\n\n"
-        "Previous questions:\n" +
-        "\n".join(f"{i+1}. {q}" for i, (q, _) in enumerate(previous_questions)) +
-        "\n\nPredicted Paper:\n"
-    )
+@app.route("/paper-predictor", methods=["POST"])
+def predictor():
+    files = request.files.getlist("pdf_file")
+    all_extracted_text = ""
+    temp_files = []
 
-    response = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-        
-    )
+    if not files or all(not file.filename for file in files):
+        return jsonify({"error": "No files were uploaded."}), 400
 
-    return response.choices[0].message.content.strip().splitlines()
+    for file in files:
+        if file and file.filename:
+            filename = file.filename.lower()
 
-@app.route("/", methods=["GET", "POST"])
-def index():
-    if request.method == "POST":
-        file = request.files.get("pdf_file")
-        if not file or file.filename == "":
-            return "No file selected"
+            try:
+                if filename.endswith(".pdf"):
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+                        file.save(tmp.name)
+                        temp_files.append(tmp.name)
+                        extracted = extract_text_from_pdf(tmp.name)
+                        all_extracted_text += extracted + "\n"
 
-        filename = secure_filename(file.filename)
-        file_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-        file.save(file_path)
+                elif filename.endswith(".docx"):
+                    extracted = extract_text_from_docx(file.stream)
+                    all_extracted_text += extracted + "\n"
 
-        ext = filename.lower().split(".")[-1]
-        if ext == "pdf":
-            raw_text, image_refs = extract_text_from_pdf(file_path)
-        elif ext == "docx":
-            raw_text, image_refs = extract_text_from_docx(file_path)
-        else:
-            return "Unsupported file type. Please upload a PDF or DOCX."
+                else:
+                    return jsonify({"error": f"Unsupported file type: {filename}"}), 400
 
-        questions = extract_questions(raw_text, image_refs)
-        question_list = [(f"Q{idx + 1}.", q, img) for idx, (q, img) in enumerate(questions)]
+            except Exception as e:
+                return jsonify({"error": f"Error processing {filename}: {str(e)}"}), 500
 
-        predicted = generate_predicted_paper(questions)
+    for f in temp_files:
+        try: os.unlink(f)
+        except: pass
 
-        return render_template("result.html", questions=question_list, predicted=predicted, filename=filename)
+    if not all_extracted_text.strip():
+        return jsonify({"error": "No text extracted from uploaded files."}), 400
 
-    return render_template("index.html")
+    identified_sections = identify_sections(all_extracted_text)
+    prompt = build_openai_prompt(all_extracted_text, identified_sections)
 
-@app.route('/uploads/images/<path:filename>')
-def uploaded_image(filename):
-    return send_from_directory(IMAGE_FOLDER, filename)
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a JSON generator. Only return valid JSON. No markdown or explanation."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+
+        content = response.choices[0].message.content
+        start = content.find('{')
+        end = content.rfind('}') + 1
+        json_str = content[start:end].replace('\n', ' ')
+        json_str = re.sub(r',\s*}', '}', json_str)
+        json_str = re.sub(r',\s*]', ']', json_str)
+        data = json.loads(json_str)
+
+        if "paper_title" not in data or "sections" not in data:
+            raise ValueError("Missing required keys in OpenAI response.")
+
+        return jsonify(data)
+
+    except Exception as e:
+        print("❌ Error:", str(e))
+        return jsonify({"error": f"Prediction failed: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(debug=True)
