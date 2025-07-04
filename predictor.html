@@ -2,39 +2,1072 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Paper Predictor</title>
+  <title>Paper Predictor - AI-Powered CBSE Question Paper Generator</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --primary-color: #4f46e5;
+      --primary-dark: #3730a3;
+      --secondary-color: #f59e0b;
+      --accent-color: #06b6d4;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --dark-color: #1e293b;
+      --light-color: #f8fafc;
+      --border-radius: 16px;
+      --border-radius-sm: 8px;
+      --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+      min-height: 100vh;
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 3rem;
+      color: var(--dark-color);
+    }
+
+    .header h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: var(--primary-color);
+      position: relative;
+    }
+
+    .header h1::after {
+      content: '';
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+      border-radius: 2px;
+    }
+
+    .header p {
+      font-size: 1.25rem;
+      color: #64748b;
+      max-width: 600px;
+      margin: 0 auto;
+      font-weight: 400;
+    }
+
+    .upload-card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 3rem;
+      margin-bottom: 2rem;
+      transition: var(--transition);
+      border: 1px solid #e2e8f0;
+    }
+
+    .upload-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+
+    .upload-area {
+      border: 2px dashed #cbd5e1;
+      border-radius: var(--border-radius);
+      padding: 4rem 2rem;
+      text-align: center;
+      background: #f8fafc;
+      transition: var(--transition);
+      cursor: pointer;
+      position: relative;
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary-color);
+      background: #f1f5f9;
+      transform: translateY(-2px);
+    }
+
+    .upload-area.dragover {
+      border-color: var(--success-color);
+      background: #ecfdf5;
+      transform: translateY(-2px);
+    }
+
+    .upload-icon {
+      font-size: 4.5rem;
+      color: var(--primary-color);
+      margin-bottom: 1.5rem;
+      transition: var(--transition);
+    }
+
+    .upload-area:hover .upload-icon {
+      transform: scale(1.1);
+      color: var(--secondary-color);
+    }
+
+    .file-input {
+      position: absolute;
+      opacity: 0;
+      width: 1px;
+      height: 1px;
+      pointer-events: none;
+    }
+
+    .btn-primary {
+      background: var(--primary-color);
+      border: none;
+      border-radius: 8px;
+      padding: 1rem 2.5rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      transition: var(--transition);
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.1);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(79, 70, 229, 0.2);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.7;
+      transform: none;
+    }
+
+    .btn-danger {
+      background: var(--danger-color);
+      border: none;
+      border-radius: 6px;
+      padding: 0.5rem 1rem;
+      font-weight: 600;
+      transition: var(--transition);
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .progress-container {
+      margin-top: 1.5rem;
+      display: none;
+    }
+
+    .progress {
+      height: 10px;
+      border-radius: 5px;
+      background: #e2e8f0;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      background: linear-gradient(90deg, #2563eb, var(--secondary-color));
+      border-radius: 5px;
+      transition: width 0.3s ease;
+      position: relative;
+    }
+
+    .progress-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      animation: shimmer 2s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+
+    .result-card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2.5rem;
+      margin-bottom: 2rem;
+      animation: slideIn 0.6s ease;
+      border: 1px solid #e2e8f0;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .section-card {
+      background: #f8fafc;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      border-left: 4px solid #2563eb;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+    }
+
+    .section-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .question-item {
+      background: white;
+      border-radius: var(--border-radius-sm);
+      padding: 1.7rem 1.3rem 1.3rem 1.3rem;
+      margin-bottom: 1.3rem;
+      box-shadow: 0 2px 8px #2563eb11;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      gap: 1.3rem;
+      align-items: flex-start;
+    }
+
+    .question-item:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transform: translateY(-1px);
+    }
+
+    .question-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #2563eb;
+      color: white;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      font-weight: bold;
+      margin-right: 1rem;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.2);
+    }
+
+    .question-content {
+      flex: 1;
+      font-size: 1.22rem;
+      font-weight: 500;
+      font-family: Arial, Helvetica, sans-serif;
+      color: #1e293b;
+    }
+
+    .question-content p {
+      font-size: 1.22rem;
+      font-weight: 600;
+      margin-bottom: 1.1rem;
+      color: #222e44;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .diagram-preview {
+      max-width: 300px;
+      border-radius: var(--border-radius-sm);
+      box-shadow: var(--box-shadow);
+      margin: 1rem 0;
+      transition: var(--transition);
+    }
+
+    .diagram-preview:hover {
+      transform: scale(1.05);
+      box-shadow: var(--box-shadow-lg);
+    }
+
+    .options-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .options-list li {
+      background: #f1f5f9;
+      padding: 1rem 1.5rem;
+      margin: 0.5rem 0;
+      border-radius: var(--border-radius-sm);
+      border-left: 3px solid #2563eb;
+      transition: var(--transition);
+    }
+
+    .options-list li:hover {
+      background: #e2e8f0;
+      transform: translateX(2px);
+    }
+
+    .chart-container {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2.5rem;
+      margin-top: 2rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .topics-card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2.5rem;
+      margin-top: 2rem;
+      border: 1px solid #e2e8f0;
+    }
+
+    .topic-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem;
+      margin: 0.75rem 0;
+      background: #f8fafc;
+      border-radius: var(--border-radius-sm);
+      border-left: 3px solid var(--success-color);
+      transition: var(--transition);
+    }
+
+    .topic-item:hover {
+      transform: translateX(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge {
+      background: #2563eb;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+
+    .alert {
+      border-radius: var(--border-radius-sm);
+      border: none;
+      padding: 1.25rem 1.5rem;
+      font-weight: 500;
+    }
+
+    .alert-danger {
+      background: linear-gradient(135deg, #fef2f2, #fee2e2);
+      color: var(--danger-color);
+      border-left: 4px solid var(--danger-color);
+    }
+
+    .alert-info {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      color: #2563eb;
+      border-left: 4px solid #2563eb;
+    }
+
+    .file-list {
+      margin-top: 1.5rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 1rem 1.5rem;
+      background: #f1f5f9;
+      border-radius: var(--border-radius-sm);
+      margin: 0.75rem 0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      transition: var(--transition);
+    }
+
+    .file-item:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .file-icon {
+      margin-right: 1rem;
+      color: var(--primary-color);
+      font-size: 1.25rem;
+    }
+
+    .scroll-top {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--primary-color);
+      color: white;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+      transition: var(--transition);
+      z-index: 1000;
+      font-size: 1.1rem;
+    }
+
+    .scroll-top:hover {
+      background: var(--primary-dark);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+
+    .navbar {
+      background: white !important;
+      border-bottom: 1px solid #e2e8f0;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.5rem;
+      color: var(--primary-color) !important;
+    }
+
+    .nav-link {
+      color: #64748b !important;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .nav-link:hover,
+    .nav-link.active {
+      color: var(--primary-color) !important;
+      transform: translateY(-1px);
+    }
+
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2.5rem;
+      }
+      
+      .upload-card {
+        padding: 2rem;
+      }
+      
+      .upload-area {
+        padding: 3rem 1.5rem;
+      }
+      
+      .upload-icon {
+        font-size: 3.5rem;
+      }
+
+      .main-container {
+        padding: 1rem;
+      }
+    }
+
+    .list-group-item {
+      border: none;
+      background: #f8fafc;
+      margin-bottom: 0.5rem;
+      border-radius: var(--border-radius-sm) !important;
+      transition: var(--transition);
+    }
+
+    .list-group-item:hover {
+      transform: translateX(2px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .hero-title {
+      position: relative;
+      font-family: Georgia, Times, 'Times New Roman', serif;
+      font-size: 3rem;
+      font-weight: bold;
+      font-style: italic;
+      color: #2563eb;
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+      text-align: center;
+    }
+    .hero-title::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -18px;
+      width: 100%;
+      max-width: 340px;
+      height: 28px;
+      background: url('/underline.svg') center/contain no-repeat;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes scroll-left {
+      0% { transform: translateX(100%); }
+      100% { transform: translateX(-100%); }
+    }
+    .moving-banner { position: relative; }
+    .banner-track {
+      display: flex;
+      width: max-content;
+      animation: scroll-left 36s linear infinite;
+    }
+    .banner-text {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 1.1rem;
+      color: #2563eb;
+      font-weight: 500;
+      position: relative;
+    }
+    .banner-text::after {
+      content: attr(data-text);
+      margin-left: 2rem;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .navbar-brand, .feature-title, .btn-primary, .feature-icon, .header h1 {
+      color: #2563eb !important;
+    }
+    .btn-primary {
+      background: #2563eb !important;
+      border-color: #2563eb !important;
+      color: #fff !important;
+    }
+    .btn-primary:hover {
+      background: #1e40af !important;
+      border-color: #1e40af !important;
+    }
+    .nav-link.active, .nav-link:focus, .nav-link:hover {
+      color: #2563eb !important;
+    }
+    .sticky-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1002;
+    }
+
+    /* --- Redesigned Paper & Features Section --- */
+    .paper-card {
+      background: #fff;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow-lg);
+      margin-bottom: 2.5rem;
+      overflow: hidden;
+      border: 1.5px solid #2563eb22;
+    }
+    .paper-header {
+      background: #fff;
+      color: #2563eb;
+      padding: 1.5rem 2rem 1.2rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+      border-bottom: 2.5px solid #2563eb22;
+    }
+    .paper-header .fa-file-alt {
+      font-size: 2.7rem;
+      opacity: 0.95;
+      color: #2563eb;
+    }
+    .paper-title {
+      font-size: 2rem;
+      font-weight: bold;
+      font-family: Arial, Helvetica, sans-serif;
+      margin-bottom: 0.2rem;
+      color: #2563eb;
+    }
+    .paper-marks {
+      font-size: 1.1rem;
+      font-weight: 500;
+      opacity: 0.95;
+      color: #2563eb;
+    }
+    .section-card {
+      background: #f4f8ff;
+      border-radius: var(--border-radius-sm);
+      margin: 2rem 2rem 2rem 2rem;
+      padding: 2rem 1.5rem 1.5rem 1.5rem;
+      border-left: 5px solid #2563eb;
+      box-shadow: 0 1px 3px rgba(37,99,235,0.07);
+    }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-size: 1.35rem;
+      font-weight: 800;
+      color: #2563eb;
+      margin-bottom: 1.2rem;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    .section-badge {
+      background: #2563eb;
+      color: #fff;
+      border-radius: 999px;
+      font-size: 1.08rem;
+      font-weight: 700;
+      padding: 0.4rem 1.3rem;
+      margin-left: 0.7rem;
+    }
+    .question-item {
+      background: #fff;
+      border-radius: var(--border-radius-sm);
+      padding: 1.7rem 1.3rem 1.3rem 1.3rem;
+      margin-bottom: 1.3rem;
+      box-shadow: 0 2px 8px #2563eb11;
+      border: 1px solid #e2e8f0;
+      display: flex;
+      gap: 1.3rem;
+      align-items: flex-start;
+    }
+    .question-number {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #2563eb;
+      color: #fff;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      font-weight: bold;
+      font-size: 1.1rem;
+      margin-right: 0.7rem;
+      box-shadow: 0 2px 4px #2563eb22;
+      flex-shrink: 0;
+    }
+    .question-content {
+      flex: 1;
+    }
+    .diagram-preview {
+      max-width: 260px;
+      border-radius: var(--border-radius-sm);
+      box-shadow: var(--box-shadow);
+      margin: 1rem 0;
+      transition: var(--transition);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-top: 2.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .topics-card, .chart-container, .likely-card {
+      background: #fff;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+      border: 1px solid #e2e8f0;
+    }
+    .topics-card h4, .likely-card h4, .chart-container h4 {
+      color: #2563eb;
+      font-weight: 700;
+      margin-bottom: 1.2rem;
+    }
+    .topic-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.1rem 0.7rem;
+      margin: 0.5rem 0;
+      background: #f8fafc;
+      border-radius: var(--border-radius-sm);
+      border-left: 3px solid #10b981;
+      font-size: 1.05rem;
+    }
+    .likely-card ol {
+      padding-left: 1.2rem;
+    }
+    .likely-card .list-group-item {
+      background: #f8fafc;
+      border-radius: var(--border-radius-sm);
+      margin-bottom: 0.5rem;
+      border: none;
+    }
+    .badge {
+      background: #2563eb;
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.875rem;
+    }
+    .bg-success {
+      background: #10b981 !important;
+      color: #fff !important;
+    }
+    .bg-info {
+      background: #38bdf8 !important;
+      color: #fff !important;
+    }
+    .bg-primary {
+      background: #2563eb !important;
+      color: #fff !important;
+    }
+    .alert-info {
+      background: #e0edff;
+      color: #2563eb;
+      border-left: 4px solid #2563eb;
+    }
+    .alert-danger {
+      background: #fef2f2;
+      color: #ef4444;
+      border-left: 4px solid #ef4444;
+    }
+  </style>
 </head>
-<body class="bg-light">
-  <div class="container mt-5">
-    <h2 class="mb-4 text-center">Class 12 CBSE Paper Predictor</h2>
-    <form id="upload-form" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label for="pdf_file" class="form-label">Upload PDF/DOCX Files</label>
-        <input class="form-control" type="file" id="pdf_file" name="pdf_file" multiple accept=".pdf,.docx">
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light sticky-navbar" style="background:#fff; border-bottom:1px solid #e2e8f0;">
+    <div class="container">
+      <a class="navbar-brand" href="/" style="font-family:Georgia,Times,'Times New Roman',serif;font-size:2rem;font-weight:bold;font-style:italic;color:#2563eb;">12thClass.com</a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/predictor">Predictor</a>
+        <a class="nav-link" href="/12thgpt">12thGPT</a>
       </div>
-      <button type="submit" class="btn btn-primary">Predict Paper</button>
-    </form>
+    </div>
+  </nav>
 
-    <div id="loading" class="mt-3" style="display:none;">Generating predicted paper... Please wait.</div>
-    <div id="error" class="alert alert-danger mt-3" style="display:none;"></div>
+  <div class="moving-banner" style="background:rgba(37,99,235,0.12);padding:0.5rem 0;overflow:hidden;">
+    <div class="banner-track">
+      <span class="banner-text" data-text="Welcome to 12thClass.com! Upload your CBSE Class 12 sample papers and generate predicted question papers instantly. | Fast, reliable, and easy to use. | Try it now! ">Welcome to 12thClass.com! Upload your CBSE Class 12 sample papers and generate predicted question papers instantly. &nbsp;|&nbsp; Fast, reliable, and easy to use. &nbsp;|&nbsp; Try it now! </span>
+    </div>
+  </div>
 
-    <div id="result" class="mt-5"></div>
+  <div class="main-container">
+    <!-- Upload Section -->
+    <div class="upload-card">
+      <form id="upload-form" enctype="multipart/form-data">
+        <div class="upload-area" id="upload-area">
+          <div class="upload-icon">
+            <i class="fas fa-cloud-upload-alt"></i>
+          </div>
+          <h4 class="mb-3">Upload Sample Papers</h4>
+          <p class="text-muted mb-4">Drag & drop PDF/DOCX files here or click to browse</p>
+          
+          <input type="file" class="file-input" id="pdf_file" name="pdf_file[]" multiple accept=".pdf,.docx">
+          <button type="button" class="btn btn-primary" id="choose-files-btn">
+            <i class="fas fa-folder-open me-2"></i> Choose Files
+          </button>
+        </div>
+        
+        <div class="file-list" id="file-list"></div>
+        
+        <div class="text-center mt-4">
+          <button type="submit" class="btn btn-primary" id="generate-btn">
+            <i class="fas fa-magic me-2"></i> Generate Paper
+          </button>
+        </div>
+      </form>
+
+      <!-- Progress Bar -->
+      <div class="progress-container" id="progress-container">
+        <div class="progress">
+          <div class="progress-bar" id="progress-bar" role="progressbar" style="width: 0%"></div>
+        </div>
+        <p class="text-center mt-3" id="progress-text">Processing files...</p>
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="text-center" style="display:none;">
+      <div class="result-card">
+        <div class="loading-spinner mb-4"></div>
+        <h4>Generating your predicted paper...</h4>
+        <p class="text-muted">This may take a few moments. Please don't close this page.</p>
+      </div>
+    </div>
+
+    <!-- Error Display -->
+    <div id="error" class="alert alert-danger" style="display:none;"></div>
+
+    <!-- Results Section -->
+    <div id="result"></div>
+    <div id="important-topics"></div>
+    <div id="chart-container" style="display: none;"></div>
+  </div>
+
+  <!-- Scroll to Top Button -->
+  <div class="scroll-top" id="scroll-top">
+    <i class="fas fa-arrow-up"></i>
   </div>
 
   <script>
+    // File handling and UI interactions
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('pdf_file');
+    const fileList = document.getElementById('file-list');
+    const generateBtn = document.getElementById('generate-btn');
+    const progressContainer = document.getElementById('progress-container');
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    const scrollTopBtn = document.getElementById('scroll-top');
+
+    // Track the Chart.js instance globally
+    let chapterChartInstance = null;
+
+    // Track selected files in a Set to prevent duplicates
+    let selectedFiles = [];
+
+    function addFiles(files) {
+      console.log('Adding files:', files.length, 'files');
+      for (let file of files) {
+        // Prevent duplicates by name and size
+        const isDuplicate = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+        if (!isDuplicate) {
+          selectedFiles.push(file);
+          console.log('Added file:', file.name);
+        } else {
+          console.log('Skipped duplicate:', file.name);
+        }
+      }
+      updateFileList();
+      updateGenerateButton();
+    }
+
+    function updateFileList() {
+      fileList.innerHTML = '';
+      if (selectedFiles.length > 0) {
+        selectedFiles.forEach((file, idx) => {
+          const fileItem = document.createElement('div');
+          fileItem.className = 'file-item';
+          fileItem.innerHTML = `
+            <i class="fas fa-file-alt file-icon"></i>
+            <span class="flex-grow-1">${file.name}</span>
+            <small class="text-muted me-3">${(file.size / 1024 / 1024).toFixed(2)} MB</small>
+            <button type="button" class="btn btn-danger btn-sm" onclick="removeFile(${idx})" title="Remove file">
+              <i class="fas fa-times"></i>
+            </button>
+          `;
+          fileList.appendChild(fileItem);
+        });
+        
+        // Add a summary
+        const summaryDiv = document.createElement('div');
+        summaryDiv.className = 'alert alert-info mt-3';
+        summaryDiv.innerHTML = `
+          <i class="fas fa-info-circle me-2"></i>
+          <strong>${selectedFiles.length}</strong> file${selectedFiles.length > 1 ? 's' : ''} selected for processing
+        `;
+        fileList.appendChild(summaryDiv);
+      }
+      updateGenerateButton();
+    }
+
+    function removeFile(idx) {
+      console.log('Removing file at index:', idx);
+      selectedFiles.splice(idx, 1);
+      updateFileList();
+      updateGenerateButton();
+      
+      // If no files left, clear the input
+      if (selectedFiles.length === 0) {
+        clearFileInput();
+      }
+    }
+
+    function updateGenerateButton() {
+      generateBtn.disabled = selectedFiles.length === 0;
+      if (selectedFiles.length === 0) {
+        generateBtn.innerHTML = '<i class="fas fa-magic me-2"></i> Generate Predicted Paper';
+      } else {
+        generateBtn.innerHTML = `<i class="fas fa-magic me-2"></i> Generate Paper (${selectedFiles.length} file${selectedFiles.length > 1 ? 's' : ''})`;
+      }
+    }
+
+    // Simple function to clear file input
+    function clearFileInput() {
+      fileInput.value = '';
+      console.log('File input cleared');
+      // Also clear the selected files array
+      selectedFiles = [];
+      updateFileList();
+      updateGenerateButton();
+    }
+    
+
+
+    // Drag and drop functionality
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      addFiles(Array.from(e.dataTransfer.files));
+    });
+
+    // Handle file input click - simplified approach
+    uploadArea.addEventListener('click', (e) => {
+      // Don't trigger if clicking on buttons
+      if (e.target.tagName === 'BUTTON' || e.target.closest('button')) {
+        return;
+      }
+      console.log('Upload area clicked, triggering file input');
+      triggerFileInput();
+    });
+
+    // Handle the "Choose Files" button click
+    const chooseFilesBtn = document.getElementById('choose-files-btn');
+    if (chooseFilesBtn) {
+      chooseFilesBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('Choose Files button clicked');
+        triggerFileInput();
+      });
+    }
+    
+    // Centralized function to trigger file input
+    function triggerFileInput() {
+      console.log('Triggering file input...');
+      
+      // Create a new file input element to ensure it works
+      const newFileInput = document.createElement('input');
+      newFileInput.type = 'file';
+      newFileInput.multiple = true;
+      newFileInput.accept = '.pdf,.docx';
+      newFileInput.style.display = 'none';
+      
+      newFileInput.addEventListener('change', (e) => {
+        console.log('New file input change event triggered');
+        if (e.target.files && e.target.files.length > 0) {
+          const files = Array.from(e.target.files);
+          console.log('Processing files from new input:', files.map(f => f.name));
+          addFiles(files);
+        }
+        // Clean up
+        if (document.body.contains(newFileInput)) {
+          document.body.removeChild(newFileInput);
+        }
+      });
+      
+      // Add error handling
+      newFileInput.addEventListener('error', (e) => {
+        console.error('File input error:', e);
+        if (document.body.contains(newFileInput)) {
+          document.body.removeChild(newFileInput);
+        }
+      });
+      
+      document.body.appendChild(newFileInput);
+      
+      // Use setTimeout to ensure the element is properly added to DOM
+      setTimeout(() => {
+        try {
+          newFileInput.click();
+          console.log('File input click triggered');
+        } catch (error) {
+          console.error('Error clicking file input:', error);
+          if (document.body.contains(newFileInput)) {
+            document.body.removeChild(newFileInput);
+          }
+        }
+      }, 100);
+    }
+
+    // Handle file selection
+    fileInput.addEventListener('change', (e) => {
+      console.log('Original file input change event triggered');
+      console.log('Files selected:', e.target.files.length);
+      
+      if (e.target.files && e.target.files.length > 0) {
+        const files = Array.from(e.target.files);
+        console.log('Processing files from original input:', files.map(f => f.name));
+        addFiles(files);
+      } else {
+        console.log('No files selected or files cleared');
+      }
+    });
+    
+    // Also add a direct click handler to the original file input
+    fileInput.addEventListener('click', (e) => {
+      console.log('Original file input clicked');
+    });
+
+    // Form submission
     document.getElementById("upload-form").addEventListener("submit", async function(e) {
       e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      const loading = document.getElementById("loading");
-      const errorDiv = document.getElementById("error");
-      const resultDiv = document.getElementById("result");
+      
+      console.log('Form submission started');
+      console.log('Selected files count:', selectedFiles.length);
+      
+      if (selectedFiles.length === 0) {
+        showError("Please select at least one file.");
+        return;
+      }
+      
+      // Check for duplicates (should not happen, but just in case)
+      const uniqueFiles = new Set(selectedFiles.map(f => f.name + f.size));
+      if (uniqueFiles.size !== selectedFiles.length) {
+        showError("Duplicate files detected. Please remove duplicates.");
+        return;
+      }
 
-      errorDiv.style.display = "none";
-      resultDiv.innerHTML = "";
-      loading.style.display = "block";
+      const formData = new FormData();
+      for (let i = 0; i < selectedFiles.length; i++) {
+        formData.append("pdf_file", selectedFiles[i]);
+        console.log('Added to FormData:', selectedFiles[i].name);
+      }
+
+      // Show loading state
+      showLoading();
+      hideError();
+      hideResults();
+
+      // Simulate progress
+      let progress = 0;
+      const progressInterval = setInterval(() => {
+        progress += Math.random() * 15;
+        if (progress > 90) progress = 90;
+        updateProgress(progress, "Processing files and generating questions...");
+      }, 500);
 
       try {
         const response = await fetch("/paper-predictor", {
@@ -42,43 +1075,277 @@
           body: formData,
         });
 
+        clearInterval(progressInterval);
+        updateProgress(100, "Complete!");
+
         const data = await response.json();
-        loading.style.display = "none";
+        hideLoading();
 
         if (data.error) {
-          errorDiv.textContent = data.error;
-          errorDiv.style.display = "block";
+          showError(data.error);
+          // Don't clear file input on error - let users retry with same files
+          console.log('Error occurred, keeping file input for retry');
           return;
         }
 
-        const html = `
-          <h4>${data.paper_title}</h4>
-          <p><strong>Total Marks:</strong> ${data.total_marks}</p>
-          ${data.sections.map(section => `
-            <div class="mt-4">
-              <h5>${section.section_name} (${section.total_questions} questions × ${section.marks_per_question} marks)</h5>
-              <ul>
-                ${section.questions.map(q => `
-                  <li>
-                    ${q.question || q.case_study}
-                    ${q.options ? `<ul>${Object.entries(q.options).map(([key, val]) => `<li><strong>${key}</strong>: ${val}</li>`).join("")}</ul>` : ""}
-                    ${q.sub_questions ? `<ol>${q.sub_questions.map(sq => `<li>${sq.question} (${sq.marks} marks)</li>`).join("")}</ol>` : ""}
-                  </li>
-                `).join("")}
-              </ul>
-            </div>
-          `).join("")}
-        `;
-
-        resultDiv.innerHTML = html;
+        // Show results
+        displayResults(data);
+        
+        // Clear the file input after successful submission
+        clearFileInput();
+        console.log('File input cleared after successful submission');
 
       } catch (err) {
+        clearInterval(progressInterval);
         console.error(err);
-        loading.style.display = "none";
-        errorDiv.textContent = "An unexpected error occurred.";
-        errorDiv.style.display = "block";
+        hideLoading();
+        showError("An unexpected error occurred. Please try again.");
+        // Don't clear file input on exception - let users retry
+        console.log('Exception occurred, keeping file input for retry');
       }
     });
+
+    function showLoading() {
+      document.getElementById('loading').style.display = 'block';
+      progressContainer.style.display = 'block';
+      generateBtn.disabled = true;
+    }
+
+    function hideLoading() {
+      document.getElementById('loading').style.display = 'none';
+      progressContainer.style.display = 'none';
+      generateBtn.disabled = false;
+    }
+
+    function showError(message) {
+      const errorDiv = document.getElementById('error');
+      errorDiv.textContent = message;
+      errorDiv.style.display = 'block';
+    }
+
+    function hideError() {
+      document.getElementById('error').style.display = 'none';
+    }
+
+    function hideResults() {
+      document.getElementById('result').innerHTML = '';
+      document.getElementById('important-topics').innerHTML = '';
+      document.getElementById('chart-container').style.display = 'none';
+    }
+
+    function updateProgress(percentage, text) {
+      progressBar.style.width = percentage + '%';
+      progressText.textContent = text;
+    }
+
+    function displayResults(data) {
+      const resultDiv = document.getElementById('result');
+      const html = `
+        <div class="paper-card">
+          <div class="paper-header">
+            <div>
+              <div class="paper-title">${data.paper_title}</div>
+              <div class="paper-marks">Total Marks: <strong>${data.total_marks}</strong></div>
+            </div>
+          </div>
+          ${data.sections.map((section, sectionIndex) => `
+            <div class="section-card">
+              <div class="section-header">
+                <i class="fas fa-list-ol"></i>
+                ${section.section_name}
+                <span class="section-badge">${section.total_questions} × ${section.marks_per_question} marks</span>
+              </div>
+              ${section.questions.map((q, qIndex) => `
+                <div class="question-item">
+                  <span class="question-number">${qIndex + 1}</span>
+                  <div class="question-content">
+                    <p class="mb-3">${q.question || q.case_study}</p>
+                    ${q.diagram_description ? `
+                      <div class="alert alert-info">
+                        <i class="fas fa-image me-2"></i>
+                        <strong>Diagram:</strong> ${q.diagram_description}
+                      </div>
+                    ` : ''}
+                    ${q.diagram_url ? `
+                      <div class="text-center">
+                        <a href="${q.diagram_url}" target="_blank">
+                          <img src="${q.diagram_url}" class="diagram-preview" alt="Question Diagram"/>
+                        </a>
+                      </div>
+                    ` : ''}
+                    ${q.options ? `
+                      <ul class="options-list">
+                        ${Object.entries(q.options).map(([k, v]) => `
+                          <li><strong>${k}.</strong> ${v}</li>
+                        `).join("")}
+                      </ul>
+                    ` : ''}
+                    ${q.sub_questions ? `
+                      <ol class="mt-3">
+                        ${q.sub_questions.map(sq => `
+                          <li>${sq.question} <span class="badge bg-secondary">${sq.marks} marks</span></li>
+                        `).join("")}
+                      </ol>
+                    ` : ''}
+                    <div class="mt-3">
+                      <span class="badge bg-info me-2">${q.chapter}</span>
+                      <span class="badge bg-success">${q.marks} marks</span>
+                    </div>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `).join("")}
+        </div>
+      `;
+      resultDiv.innerHTML = html;
+
+      // Trigger MathJax typesetting
+      if (typeof MathJax !== 'undefined') {
+        MathJax.typesetPromise();
+      }
+
+      // Display important topics
+      if (data.important_topics) {
+        const topicsDiv = document.getElementById('important-topics');
+        const topicsHtml = `
+          <div class="topics-card">
+            <h4 class="mb-3">
+              <i class="fas fa-star text-warning me-2"></i>
+              Important Topics with Page Numbers
+            </h4>
+            ${data.important_topics.map(topic => `
+              <div class="topic-item">
+                <span>${topic.topic}</span>
+                <span class="badge">Page ${topic.page}</span>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        topicsDiv.innerHTML = topicsHtml;
+      }
+
+      // Display most likely questions
+      if (data.most_likely_questions && data.most_likely_questions.length > 0) {
+        const likelyDiv = document.createElement('div');
+        likelyDiv.className = 'topics-card';
+        likelyDiv.innerHTML = `
+          <h4 class="mb-3">
+            <i class="fas fa-lightbulb text-warning me-2"></i>
+            Top 10 Most Likely Questions (Based on Previous Years)
+          </h4>
+          <ol class="list-group list-group-numbered">
+            ${data.most_likely_questions.map(q => `
+              <li class="list-group-item">
+                <div><strong>Q:</strong> ${q.question}</div>
+                <div class="small text-muted">
+                  <span><strong>Chapter:</strong> ${q.chapter || 'N/A'}</span>
+                  ${q.page ? ` | <strong>Page:</strong> ${q.page}` : ''}
+                  ${q.ncert_book ? ` | <strong>NCERT Book:</strong> ${q.ncert_book}` : ''}
+                </div>
+              </li>
+            `).join("")}
+          </ol>
+        `;
+        // Insert after important topics
+        const topicsDiv = document.getElementById('important-topics');
+        topicsDiv.parentNode.insertBefore(likelyDiv, topicsDiv.nextSibling);
+      }
+
+      // Display chapter weightage chart
+      if (data.chapter_weightage) {
+        const chartContainer = document.getElementById('chart-container');
+        chartContainer.innerHTML = `
+          <h4 class="mb-3">
+            <i class="fas fa-chart-bar text-primary me-2"></i>
+            Predicted Chapter-wise Weightage
+          </h4>
+          <canvas id="chapterChart" style="width:100%;height:100%;display:block;"></canvas>
+        `;
+        chartContainer.style.height = '350px'; // Ensure container has fixed height
+
+        const chartCanvas = document.getElementById('chapterChart');
+
+        // Destroy previous chart instance if it exists
+        if (chapterChartInstance) {
+          chapterChartInstance.destroy();
+        }
+
+        chapterChartInstance = new Chart(chartCanvas.getContext('2d'), {
+          type: 'bar',
+          data: {
+            labels: Object.keys(data.chapter_weightage),
+            datasets: [{
+              label: 'Predicted Marks',
+              data: Object.values(data.chapter_weightage),
+              backgroundColor: 'rgba(79, 70, 229, 0.6)',
+              borderColor: 'rgba(79, 70, 229, 1)',
+              borderWidth: 2,
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            events: [], // No hover/click
+            plugins: {
+              legend: { display: false },
+              tooltip: { enabled: false }
+            },
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: { display: true, text: 'Marks', font: { weight: 'bold' } }
+              },
+              x: {
+                title: { display: true, text: 'Chapters', font: { weight: 'bold' } }
+              }
+            }
+          }
+        });
+        chartContainer.style.display = 'block';
+      }
+    }
+
+    // Scroll to top functionality
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        scrollTopBtn.style.display = 'flex';
+      } else {
+        scrollTopBtn.style.display = 'none';
+      }
+    });
+
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // Initialize
+    updateGenerateButton();
+    
+    // Add some debugging info
+    console.log('File upload system initialized');
+    console.log('File input element:', fileInput);
+    console.log('Upload area element:', uploadArea);
+    console.log('Choose files button:', chooseFilesBtn);
+    
+    // Test file input functionality
+    if (fileInput) {
+      console.log('File input found and ready');
+      console.log('File input attributes:', {
+        multiple: fileInput.multiple,
+        accept: fileInput.accept,
+        id: fileInput.id
+      });
+    } else {
+      console.error('File input not found!');
+    }
+    
+    if (chooseFilesBtn) {
+      console.log('Choose files button found and ready');
+    } else {
+      console.error('Choose files button not found!');
+    }
   </script>
 </body>
 </html>
