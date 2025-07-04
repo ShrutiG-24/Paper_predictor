@@ -1,0 +1,357 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Paper Predictor | Home</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="https://fonts.gstatic.com/s/i/materialicons/book/v6/24px.svg" type="image/svg+xml">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" crossorigin rel="preconnect">
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --primary-dark: #1e40af;
+      --secondary-color: #2563eb;
+      --accent-color: #2563eb;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --dark-color: #1e293b;
+      --light-color: #f8fafc;
+      --border-radius: 16px;
+      --border-radius-sm: 8px;
+      --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      --box-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #f8fafc;
+      font-family: Arial, Helvetica, sans-serif;
+      margin: 0;
+      padding: 0;
+      animation: fadeIn 1.2s;
+      color: var(--dark-color);
+      line-height: 1.6;
+    }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: #fff;
+      box-shadow: none;
+      border-bottom: 2px solid #e5e7eb;
+      padding: 0.7rem 0;
+      margin-bottom: 1.5rem;
+      transition: box-shadow 0.2s;
+    }
+    .sticky-header .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .header-logo {
+      font-size: 2.2rem;
+      color: var(--primary-color);
+      margin-right: 0.7rem;
+      vertical-align: middle;
+    }
+    .header-title {
+      font-weight: 700;
+      color: var(--primary-color);
+      font-size: 1.5rem;
+      margin-bottom: 0;
+      letter-spacing: 1px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .header-tagline {
+      color: var(--primary-dark);
+      font-size: 1.05rem;
+      margin-left: 1.2rem;
+      font-weight: 400;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .main-content { flex: 1 0 auto; }
+    .hero-section {
+      text-align: center;
+      padding: 4.5rem 1rem 2.5rem 1rem;
+      background: #fff;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow-lg);
+      margin-bottom: 2.5rem;
+      animation: fadeIn 1.2s;
+    }
+    .hero-title {
+      position: relative;
+      font-family: Georgia, Times, 'Times New Roman', serif;
+      font-size: 3rem;
+      font-weight: bold;
+      font-style: italic;
+      color: #2563eb;
+      line-height: 1.1;
+      margin-bottom: 1.2rem;
+      text-align: center;
+    }
+    .hero-title::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -18px;
+      width: 100%;
+      max-width: 340px;
+      height: 28px;
+      background: url('/underline.svg') center/contain no-repeat;
+      pointer-events: none;
+      z-index: 1;
+    }
+    .hero-desc {
+      font-size: 1.25rem;
+      color: #64748b;
+      margin-bottom: 2.2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      font-weight: 400;
+    }
+    .get-started-btn {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding: 1rem 2.5rem;
+      box-shadow: 0 2px 4px rgba(37, 99, 235, 0.1);
+      transition: var(--transition);
+      margin-top: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+    .get-started-btn:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(37, 99, 235, 0.2);
+      color: #fff;
+    }
+    .features-section {
+      margin-top: 2.5rem;
+      margin-bottom: 2.5rem;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+    .feature-card {
+      background: #fff;
+      border-radius: var(--border-radius-sm);
+      box-shadow: var(--box-shadow);
+      padding: 2.2rem 1.5rem 1.5rem 1.5rem;
+      text-align: center;
+      margin-bottom: 1.5rem;
+      transition: box-shadow 0.2s, transform 0.2s;
+      min-height: 260px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      animation: fadeIn 1.2s;
+      border: 1px solid #e2e8f0;
+    }
+    .feature-card:hover {
+      box-shadow: 0 8px 32px #2563eb22;
+      transform: translateY(-4px) scale(1.02);
+    }
+    .feature-icon {
+      font-size: 2.5rem;
+      color: var(--primary-color);
+      margin-bottom: 1rem;
+    }
+    .feature-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      margin-bottom: 0.7rem;
+    }
+    .feature-desc {
+      font-size: 1.05rem;
+      color: #64748b;
+    }
+    .footer {
+      width: 100vw;
+      background: #0f172a;
+      color: #fff;
+      text-align: center;
+      font-size: 1.05rem;
+      padding: 1.1rem 0 0.7rem 0;
+      margin-top: 2.5rem;
+      letter-spacing: 0.5px;
+      border-top-left-radius: var(--border-radius-sm);
+      border-top-right-radius: var(--border-radius-sm);
+      box-shadow: 0 -4px 16px rgba(37,99,235,0.13);
+      flex-shrink: 0;
+      position: relative;
+      left: 0;
+      right: 0;
+      bottom: 0;
+    }
+    .footer a {
+      color: #fff;
+      text-decoration: underline;
+      font-weight: 500;
+      margin-left: 0.5rem;
+    }
+    @media (max-width: 767px) {
+      .hero-title { font-size: 2rem; }
+      .feature-card { min-height: 200px; }
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+    .moving-banner {
+      width: 100%;
+      position: relative;
+      z-index: 10;
+    }
+    .banner-track {
+      display: flex;
+      width: fit-content;
+      animation: scroll-left 36s linear infinite;
+    }
+    .banner-text {
+      white-space: nowrap;
+      font-size: 1.1rem;
+      color: #2563eb;
+      font-weight: 500;
+    }
+    .navbar-brand, .feature-title, .btn-primary, .feature-icon {
+      color: #2563eb !important;
+    }
+    .btn-primary {
+      background: #2563eb !important;
+      border-color: #2563eb !important;
+    }
+    .btn-primary:hover {
+      background: #1e40af !important;
+      border-color: #1e40af !important;
+    }
+    .nav-link.active, .nav-link:focus, .nav-link:hover {
+      color: #2563eb !important;
+    }
+    .moving-banner { position: relative; }
+    .banner-track {
+      display: flex;
+      width: max-content;
+      animation: scroll-left 36s linear infinite;
+    }
+    .banner-text {
+      display: inline-block;
+      white-space: nowrap;
+      font-size: 1.1rem;
+      color: #2563eb;
+      font-weight: 500;
+      position: relative;
+    }
+    .banner-text::after {
+      content: attr(data-text);
+      margin-left: 2rem;
+    }
+    @keyframes scroll-left {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+    .sticky-navbar {
+      position: sticky;
+      top: 0;
+      z-index: 1002;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light sticky-navbar" style="background:#fff; border-bottom:1px solid #e2e8f0;">
+    <div class="container" style="display: flex; align-items: center;">
+      <a href="/" style="display: flex; align-items: center; text-decoration: none;">
+        <span style="font-family:Georgia,Times,'Times New Roman',serif;font-size:2rem;font-weight:bold;font-style:italic;color:#2563eb; vertical-align:middle;">12thClass.com</span>
+      </a>
+      <div class="navbar-nav ms-auto">
+        <a class="nav-link" href="/">Home</a>
+        <a class="nav-link" href="/predictor">Predictor</a>
+        <a class="nav-link" href="/12thgpt">12thGPT</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="moving-banner" style="background:rgba(37,99,235,0.12);padding:0.5rem 0;overflow:hidden;">
+    <div class="banner-track">
+      <span class="banner-text" data-text="Welcome to 12thClass.com! Your one-stop platform for CBSE Class 12 resources, practice papers, doubt solving, and more. | Fast, reliable, and easy to use. | Try it now! ">Welcome to 12thClass.com! Your one-stop platform for CBSE Class 12 resources, practice papers, doubt solving, and more. &nbsp;|&nbsp; Fast, reliable, and easy to use. &nbsp;|&nbsp; Try it now! </span>
+    </div>
+  </div>
+ 
+  <div class="main-content">
+    <div class="container">
+      <section class="hero-section">
+        <div style="text-align:center; margin-bottom:0.7rem;">
+          
+        </div>
+        <div style="text-align:center; margin-bottom:1.2rem;">
+          <span style="font-family:Georgia,Times,'Times New Roman',serif;font-size:2.3rem;font-weight:bold;font-style:italic;color:#2563eb; letter-spacing:1px;">Paper Predictor</span>
+        </div>
+        <div style="margin-bottom:2rem; display:flex; align-items:center; justify-content:center; min-height:7rem;">
+          <div style="font-size:1.35rem; color:#2563eb; font-weight:500; text-align:center; width:100%; max-width:700px; margin:0 auto;">
+            Instantly generate CBSE Class 12 board-level question papers from your sample papers. Practice with realistic, mark-distributed, and diagram-based questions for Physics, Math, Biology, and more.
+          </div>
+        </div>
+        <a href="/predictor" class="get-started-btn">Get Started</a>
+      </section>
+      <section class="features-section">
+        <div class="row justify-content-center align-items-stretch">
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card h-100">
+              <div class="feature-title">Smart Paper Prediction</div>
+              <div class="feature-desc">Generates new, exam-level questions based on your uploaded sample papers using advanced technology.</div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card h-100">
+              <div class="feature-title">CBSE Marking Scheme</div>
+              <div class="feature-desc">Ensures clear mark distribution and a real board exam feel, including case studies and diagrams.</div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card h-100">
+              <div class="feature-title">Diagram-Based Questions</div>
+              <div class="feature-desc">Includes questions that require drawing or labeling diagrams, circuits, and more.</div>
+            </div>
+          </div>
+          <div class="col-md-6 col-lg-3">
+            <div class="feature-card h-100">
+              <div class="feature-title">Modern, User-Friendly UI</div>
+              <div class="feature-desc">Enjoy a beautiful, accessible, and responsive interface for a seamless experience.</div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <div style="max-width:700px;margin:2.5rem auto 0 auto;background:#e0edff;border-radius:16px;padding:1.7rem 1.2rem;text-align:center;box-shadow:0 2px 8px #2563eb11;">
+        <span style="font-size:1.25rem;font-weight:600;color:#2563eb;">Try our new <a href="/12thgpt" style="color:#2563eb;text-decoration:underline;font-weight:bold;">12thGPT Doubt Chatbot</a>!</span>
+        <div style="margin-top:0.7rem;font-size:1.08rem;color:#1e293b;">Instantly get answers to your Class 12 doubts by typing a question or uploading an image. Powered by advanced AI.</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer">
+    &copy; 2025 Paper Predictor | Made for CBSE Class 12 Board Exam Practice
+    <span class="d-none d-md-inline"></span>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> 
