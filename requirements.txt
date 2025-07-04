@@ -1,0 +1,11 @@
+flask
+openai
+python-dotenv
+pytesseract
+pillow
+pdf2image
+python-docx
+werkzeug
+pdfplumber
+PyMuPDF
+google-generativeai
